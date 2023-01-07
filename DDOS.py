@@ -175,3 +175,17 @@ class RequestProxyHTTP(threading.Thread):
                     pass
             except:
                 pass
+
+if __name__ == "__main__":
+    args = usage()
+
+    request_list =[]
+    proxy_list =[]
+    cf_token =[]
+
+    if args.ssl:
+        url = "http://" + args.host
+    else:
+        url = "https://" + args.host
+
+    main()
